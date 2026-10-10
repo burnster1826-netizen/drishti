@@ -1,0 +1,8 @@
+{
+  "name": "Drishti",
+  "description": "Mobile-first personal safety guardian with instant SOS emergency broadcast, verified contacts, fake call simulator, and safer route intelligence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

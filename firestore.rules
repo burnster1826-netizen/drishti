@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidTimestamp(val) {
+      return val is timestamp && val <= request.time;
+    }
+
+    function isValidUserProfile(data) {
+      return data.id is string
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.email is string && data.email.size() > 0
+        && (!('emergencyMessage' in data) || (data.emergencyMessage is string && data.emergencyMessage.size() <= 500))
+        && (!('retentionDays' in data) || (data.retentionDays is number && data.retentionDays >= 1 && data.retentionDays <= 365))
+        && (!('notifySms' in data) || data.notifySms is bool)
+        && (!('notifyEmail' in data) || data.notifyEmail is bool)
+        && (!('notifyPush' in data) || data.notifyPush is bool)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidEmergencyContact(data) {
+      return data.id is string
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30
+        && (!('email' in data) || (data.email is string && data.email.size() <= 120))
+        && (!('preferredMethod' in data) || data.preferredMethod is string)
+        && (!('isVerified' in data) || data.isVerified is bool)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidSosEvent(data, userId) {
+      return data.id is string
+        && data.userId == userId
+        && data.latitude is number && data.latitude >= -90.0 && data.latitude <= 90.0
+        && data.longitude is number && data.longitude >= -180.0 && data.longitude <= 180.0
+        && data.status is string
+        && (!('accuracyMeters' in data) || data.accuracyMeters is number)
+        && (!('videoRecordingUrl' in data) || data.videoRecordingUrl is string)
+        && (!('message' in data) || data.message is string)
+        && (!('notifiedContactsCount' in data) || data.notifiedContactsCount is number)
+        && (!('auditLog' in data) || data.auditLog is list)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      match /contacts/{contactId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidEmergencyContact(request.resource.data);
+        allow update: if isOwner(userId) && isValidEmergencyContact(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /sosEvents/{eventId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidSosEvent(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidSosEvent(request.resource.data, userId);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

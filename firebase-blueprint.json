@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile settings and contact broadcast preferences.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "emergencyMessage": { "type": "string" },
+        "retentionDays": { "type": "number" },
+        "notifySms": { "type": "boolean" },
+        "notifyEmail": { "type": "boolean" },
+        "notifyPush": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "EmergencyContact": {
+      "title": "EmergencyContact",
+      "description": "Registered trusted contact to receive emergency SMS and GPS links.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "preferredMethod": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "phone"]
+    },
+    "SosEvent": {
+      "title": "SosEvent",
+      "description": "SOS emergency activation record with GPS coordinates and audit trail.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "accuracyMeters": { "type": "number" },
+        "status": { "type": "string" },
+        "videoRecordingUrl": { "type": "string" },
+        "message": { "type": "string" },
+        "notifiedContactsCount": { "type": "number" },
+        "auditLog": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "latitude", "longitude", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual user document containing preferences and emergency text."
+    },
+    "/users/{userId}/contacts/{contactId}": {
+      "schema": "EmergencyContact",
+      "description": "Subcollection of trusted emergency contacts for the user."
+    },
+    "/users/{userId}/sosEvents/{eventId}": {
+      "schema": "SosEvent",
+      "description": "Subcollection of triggered SOS incidents and audit histories."
+    }
+  }
+}
